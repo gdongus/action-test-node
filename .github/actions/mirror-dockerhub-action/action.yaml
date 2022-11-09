@@ -1,0 +1,28 @@
+name: Mirror Dockerhub image
+description: Pulls an image from docker hub and pushes it into another registry
+
+inputs:
+  source-repository:
+    description: Source repository name
+    required: true
+  source-tag:
+    description: Source image tag
+    required: true
+  target-registry:
+    description: Target registry host name
+    required: true
+  target-repository:
+    description: Target repository name
+    required: true
+  target-tag:
+    description: Target tag
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        docker pull ${{ inputs.source-repository }}:${{ inputs.source-tag }}
+        docker tag ${{ inputs.source-repository }}:${{ inputs.source-tag }} ${{ inputs.target-registry }}/${{ inputs.target-repository }}:${{ inputs.target-tag }}
+        docker push ${{ inputs.target-registry }}/${{ inputs.target-repository }}:${{ inputs.target-tag }}

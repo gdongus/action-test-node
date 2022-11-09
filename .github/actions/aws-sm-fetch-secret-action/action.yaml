@@ -1,0 +1,28 @@
+name: AWS SecretsManager fetch secret
+description: Reads aws secret manager secret
+
+inputs:
+  aws-secret-id:
+    description: AWS secrets manager secret id to fetch
+    required: true
+  encode-base64:
+    description: Encode output as Base64
+    required: false
+outputs:
+  aws-secret-value:
+    description: The value of the fetched secret
+    value: ${{ steps.fetch-aws-secret-value.outputs.aws-secret-value }}
+
+runs:
+  using: composite
+  steps:
+    - id: fetch-aws-secret-value
+      run: |
+        RESPONSE=$(aws secretsmanager get-secret-value  --secret-id ${{ inputs.aws-secret-id }})
+        FETCHED_SECRET=$(echo "$RESPONSE" | jq .SecretString -r)
+        if [ "$FETCHED_SECRET" = "null" ]; then echo "$RESPONSE" >&2; exit 1; fi
+        if [ -n "${{ inputs.encode-base64 }}" ]; then
+          FETCHED_SECRET=$(echo -n "$FETCHED_SECRET" | base64 -w 0)
+        fi
+        echo "aws-secret-value=$FETCHED_SECRET" >> $GITHUB_OUTPUT
+      shell: bash

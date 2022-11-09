@@ -1,0 +1,30 @@
+name: Notify Slack On Failure
+description: Sends a slack notification if a previous step has failed
+
+inputs:
+  slack-webhook-url:
+    description: The slack webhook URL
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: send slack notification
+      id: slack-notify
+      uses: slackapi/slack-github-action@v1
+      with:
+        payload: |
+          {
+           "blocks": [
+               {
+                   "type": "section",
+                   "text": {
+                       "type": "mrkdwn",
+                       "text": "@here :rotating_light: *${{ github.workflow }}: Build <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.run_id }}> failed*\nfor commit <${{ github.event.head_commit.url }}|${{ github.event.head_commit.message }}>."
+                   }
+               }
+           ]
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ inputs.slack-webhook-url }}
+        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
